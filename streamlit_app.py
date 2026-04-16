@@ -89,6 +89,19 @@ st.markdown("""
 # 앱 제목
 st.title("🎓 똑똑한 자리 배치 도우미")
 st.markdown("초등학교 학급 자리 바꾸기를 쉽고 스마트하게!")
+st.divider()
+
+st.markdown("""<div style='text-align: center; padding: 30px 20px;'>
+<h2 style='color: #22714b; margin: 0;'>👋 환영합니다!</h2>
+<p style='font-size: 16px; color: #333; margin: 15px 0;'>우리 반 자리 바꾸기를 시작해 볼까요?<br>단계별로 안내해 드릴게요.</p>
+</div>""", unsafe_allow_html=True)
+
+if st.session_state.step == 0:
+    col1, col2, col3 = st.columns(3)
+    with col2:
+        if st.button("🚀 시작하기", key="start", help="자리 배치 과정을 시작합니다", use_container_width=True):
+            st.session_state.step = 1
+            st.rerun()
 
 # 세션 상태 초기화
 if 'step' not in st.session_state:
@@ -275,14 +288,7 @@ def render_seat_map(arrangement, seats):
             st.markdown(''.join(rows), unsafe_allow_html=True)
 
 # 단계별 UI 함수들
-def step_0_welcome():
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.markdown("### 👋 환영합니다!")
-    st.markdown("우리 반 자리 바꾸기를 시작해 볼까요? 단계별로 안내해 드릴게요.")
-    if st.button("시작하기", key="start", help="자리 배치 과정을 시작합니다"):
-        st.session_state.step = 1
-        st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+
 
 def step_1_students():
     st.markdown('<div class="step-header">1단계: 학생 명단 입력</div>', unsafe_allow_html=True)
@@ -634,9 +640,7 @@ if st.session_state.step > 0:
         st.rerun()
 
 # 단계별 UI 호출
-if st.session_state.step == 0:
-    step_0_welcome()
-elif st.session_state.step == 1:
+if st.session_state.step == 1:
     step_1_students()
 elif st.session_state.step == 2:
     step_2_seats()
