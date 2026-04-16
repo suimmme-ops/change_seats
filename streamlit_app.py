@@ -609,7 +609,7 @@ def step_8_result():
 
 # 진행 상태 표시
 steps = [
-    "환영", "학생 명단", "자리 구조", "모둠 균형", "분리 배치", "앞줄 우선", "뒷줄 우선", "배정 실행", "결과 확인"
+    "1단계: 환영", "2단계: 학생 명단", "3단계: 자리 구조", "4단계: 모둠 균형", "5단계: 분리 배치", "6단계: 앞줄 우선", "7단계: 뒷줄 우선", "8단계: 배정 실행", "9단계: 결과 확인"
 ]
 progress = (st.session_state.step / (len(steps) - 1)) * 100
 st.markdown(f'<div class="progress-bar"><div class="progress-fill" style="width: {progress}%"></div></div>', unsafe_allow_html=True)
