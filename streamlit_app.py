@@ -288,8 +288,14 @@ def step_1_students():
     input_method = st.radio("입력 방식 선택", ["직접 입력", "CSV 파일 업로드"], key="input_method")
     
     if input_method == "직접 입력":
+        # 이전 입력값이 있으면 불러오기
+        default_text = ""
+        if st.session_state.students:
+            default_text = "\n".join([f"{s['번호']} {s['이름']}" for s in st.session_state.students])
+        
         text_input = st.text_area(
             "학생 명단을 입력하세요 (예: 1 김민준\\n2 박서연)",
+            value=default_text,
             placeholder="1 김민준\n2 박서연\n3 이도윤",
             height=150,
             key="student_text"
@@ -393,11 +399,16 @@ def step_4_separation():
     st.markdown('<div class="step-header">4단계: 분리 배치 학생 세트</div>', unsafe_allow_html=True)
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown("서로 멀리 떨어뜨려 배치할 학생 세트를 입력하세요.")
-    st.markdown("예: 박은영 - 조미진\\n김민수, 이지후, 최도윤")
+    st.markdown("**입력 예시:**")
+    st.markdown("- 한 줄에 한 세트씩 입력")
+    st.markdown("- 학생 이름은 띄어쓰기, 쉼표, 하이픈(-) 중 아무거나 사용 가능")
+    st.markdown("- 예: 박은영 조미진")
+    st.markdown("- 예: 김민수,이지후")
+    st.markdown("- 예: 최도윤-김민준")
     
     separation_input = st.text_area(
-        "세트별로 한 줄씩 입력 (구분자: -, ,, /)",
-        placeholder="박은영 - 조미진\n김민수, 이지후",
+        "세트별로 한 줄씩 입력",
+        placeholder="박은영 조미진\n김민수 이지후 최도윤",
         height=100,
         key="separation_text"
     )
