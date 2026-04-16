@@ -50,14 +50,22 @@ st.markdown("""
         background: #fff;
         border: 1px solid #dee2e6;
         border-radius: 8px;
-        padding: 10px;
-        margin: 5px;
+        padding: 12px;
+        margin: 8px 0;
         text-align: center;
-        min-height: 60px;
+        min-height: 50px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 500;
+        font-size: 14px;
+    }
+    .group-header {
+        font-size: 20px;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 15px;
+        color: #22714b;
     }
     .front-seat { background-color: #e3f2fd; }
     .back-seat { background-color: #f3e5f5; }
@@ -251,22 +259,18 @@ def render_seat_map(arrangement, seats):
     
     for i, (group, group_seats) in enumerate(groups.items()):
         with cols[i]:
-            st.markdown(f"**{group}분단**")
+            # 분단 제목을 먼저 표시
+            st.markdown(f'<div class="group-header">{group}분단</div>', unsafe_allow_html=True)
+            
             # 행별 정렬 (앞줄부터)
             sorted_seats = sorted(group_seats, key=lambda s: (s['행'], s['열']))
             
-            # 2열로 표시
+            # 세로 1렬로 표시
             rows = []
-            current_row = []
             for seat in sorted_seats:
                 student = next((name for name, seat_num in arrangement.items() if seat_num == seat['좌석번호']), "")
                 seat_class = "front-seat" if seat['앞줄'] else "back-seat" if seat['뒷줄'] else ""
-                current_row.append(f'<div class="seat-card {seat_class}">{student}<br/><small>{seat["좌석번호"]}</small></div>')
-                if len(current_row) == 2:
-                    rows.append('<div style="display: flex;">' + ''.join(current_row) + '</div>')
-                    current_row = []
-            if current_row:
-                rows.append('<div style="display: flex;">' + ''.join(current_row) + '</div>')
+                rows.append(f'<div class="seat-card {seat_class}">{student}<br/><small>({seat["좌석번호"]}번)</small></div>')
             
             st.markdown(''.join(rows), unsafe_allow_html=True)
 
@@ -569,15 +573,20 @@ def step_8_result():
         for i, seat in enumerate(st.session_state.seats):
             with cols[i % 3]:
                 current_student = next((name for name, seat_num in st.session_state.arrangement.items() if seat_num == seat['좌석번호']), "")
+                options = [""] + [s['이름'] for s in st.session_state.students]
+                try:
+                    default_index = options.index(current_student) if current_student else 0
+                except ValueError:
+                    default_index = 0
                 new_student = st.selectbox(
                     f"좌석 {seat['좌석번호']} ({seat['분단']}분단)",
-                    [""] + [s['이름'] for s in st.session_state.students],
-                    index=[""] + [s['이름'] for s in st.session_state.students].index(current_student) + 1 if current_student else 0,
+                    options,
+                    index=default_index,
                     key=f"seat_{seat['좌석번호']}"
                 )
                 if new_student and new_student != current_student:
                     # 기존 자리 비우기
-                    if current_student:
+                    if current_student and current_student in st.session_state.arrangement:
                         del st.session_state.arrangement[current_student]
                     # 새 자리 할당
                     st.session_state.arrangement[new_student] = seat['좌석번호']
