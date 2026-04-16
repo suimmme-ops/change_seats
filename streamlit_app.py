@@ -331,8 +331,8 @@ def step_1_students():
 
 def step_2_seats():
     st.markdown('<div class="step-header">2단계: 자리 구조 입력</div>', unsafe_allow_html=True)
-    st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown("교실 자리 구조를 설정해 주세요.")
+    st.markdown('<div class="card">', unsafe_allow_html=True)
     
     num_groups = st.number_input("총 분단 수", min_value=1, max_value=10, value=4, key="num_groups")
     
@@ -626,14 +626,6 @@ def step_8_result():
         )
     
     st.markdown('</div>', unsafe_allow_html=True)
-
-# 진행 상태 표시
-steps = [
-    "1단계: 환영", "2단계: 학생 명단", "3단계: 자리 구조", "4단계: 모둠 균형", "5단계: 분리 배치", "6단계: 앞줄 우선", "7단계: 뒷줄 우선", "8단계: 배정 실행", "9단계: 결과 확인"
-]
-progress = (st.session_state.step / (len(steps) - 1)) * 100
-st.markdown(f'<div class="progress-bar"><div class="progress-fill" style="width: {progress}%"></div></div>', unsafe_allow_html=True)
-st.markdown(f"**진행 단계: {steps[st.session_state.step]}**")
 
 # 이전 단계 버튼
 if st.session_state.step > 0:
