@@ -67,6 +67,16 @@ st.markdown("""
         margin-bottom: 15px;
         color: #22714b;
     }
+    .stNumberInput input {
+        text-align: center !important;
+    }
+    .stNumberInput label {
+        text-align: center !important;
+        display: block !important;
+    }
+    .stAlert {
+        text-align: center !important;
+    }
     .front-seat { background-color: #e3f2fd; }
     .back-seat { background-color: #f3e5f5; }
     .warning { color: #dc3545; font-weight: 500; }
@@ -341,45 +351,66 @@ def step_2_seats():
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        num_groups = st.number_input("총 분단 수", min_value=1, max_value=10, value=4, key="num_groups")
-        
-        st.markdown("---")
-        
-        seats_per_group = []
-        cols = st.columns(num_groups)
-        for i in range(num_groups):
-            with cols[i]:
-                seats = st.number_input(f"{i+1}분단", min_value=1, max_value=20, value=5, key=f"group_{i}")
-                seats_per_group.append(seats)
-        
-        st.markdown("---")
-        
-        total_seats = sum(seats_per_group)
-        student_count = len(st.session_state.students)
-        
-        st.info(f"총 좌석 수: {total_seats}, 학생 수: {student_count}")
-        
-        if total_seats != student_count:
-            st.warning("⚠️ 좌석 수와 학생 수가 맞지 않아요. 조정해 주세요.")
-        else:
-            st.success("✅ 좌석 구조가 설정되었습니다!")
-            if st.button("다음 단계로", key="confirm_seats"):
+        # 이전 값이 있으면 불러오기
+        default_num_groups = st.session_state.seat_layout['num_groups'] if st.session_state.seat_layout else 4
+        num_groups = st.number_input("총 분단 수", min_value=1, max_value=10, value=default_num_groups, key="num_groups")
+    
+    st.markdown("---")
+    
+    # 분단 입력 필드는 전체 너비 사용
+    seats_per_group = []
+    cols = st.columns(num_groups)
+    for i in range(num_groups):
+        with cols[i]:
+            # 이전 값이 있으면 불러오기
+            default_seats = 5
+            if st.session_state.seat_layout and i < len(st.session_state.seat_layout.get('seats_per_group', [])):
+                default_seats = st.session_state.seat_layout['seats_per_group'][i]
+            seats = st.number_input(f"{i+1}분단", min_value=1, max_value=20, value=default_seats, key=f"group_{i}")
+            seats_per_group.append(seats)
+    
+    # 세션 상태에 저장
+    st.session_state.seat_layout = {'num_groups': num_groups, 'seats_per_group': seats_per_group}
+    
+    st.markdown("---")
+    
+    # 정보 메시지는 전체 너비 사용
+    total_seats = sum(seats_per_group)
+    student_count = len(st.session_state.students)
+    
+    st.info(f"총 좌석 수: {total_seats}, 학생 수: {student_count}")
+    
+    if total_seats != student_count:
+        st.warning("⚠️ 좌석 수와 학생 수가 맞지 않아요. 조정해 주세요.")
+    else:
+        st.success("✅ 좌석 구조가 설정되었습니다!")
+        # 버튼은 중앙 정렬
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            if st.button("다음 단계로", key="confirm_seats", use_container_width=True):
                 st.session_state.seats = build_seat_layout(num_groups, seats_per_group)
-                st.session_state.seat_layout = {'num_groups': num_groups, 'seats_per_group': seats_per_group}
                 st.session_state.step = 3
                 st.rerun()
 
 def step_3_balance():
     st.markdown('<div class="step-header">3단계: 모둠 균형 배치 학생</div>', unsafe_allow_html=True)
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.markdown("각 모둠별로 1명씩 들어가면 좋을 학생들을 입력하세요.")
-    st.markdown("이 학생들은 가능한 서로 다른 분단에 분산 배치됩니다.")
+    st.markdown("👥 각 모둠별로 1명씩 들어가면 좋을 학생들을 입력하세요.")
+    st.markdown("✨ 이 학생들은 가능한 서로 다른 분단에 분산 배치됩니다.")
+    
+    # 이전 입력값이 있으면 불러오기
+    default_text = ""
+    if 'balance_text_input' in st.session_state and st.session_state.balance_text_input:
+        default_text = st.session_state.balance_text_input
     
     balance_input = st.text_area(
         "학생 이름 입력 (쉼표로 구분)",
-        placeholder="김갑수, 박은영, 조미진",
+        value=default_text,
+        placeholder="박성진, 강영현, 김원필, 윤도운",
         key="balance_text"
     )
+    
+    # 세션 상태에 저장
+    st.session_state.balance_text_input = balance_input
     
     if balance_input:
         names = [name.strip() for name in balance_input.split(',') if name.strip()]
@@ -405,26 +436,32 @@ def step_3_balance():
                 st.session_state.balance_students = [name for name in names if any(s['이름'] == name for s in st.session_state.students)]
             st.session_state.step = 4
             st.rerun()
-    
-    st.markdown('</div>', unsafe_allow_html=True)
 
 def step_4_separation():
     st.markdown('<div class="step-header">4단계: 분리 배치 학생 세트</div>', unsafe_allow_html=True)
-    st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown("서로 멀리 떨어뜨려 배치할 학생 세트를 입력하세요.")
-    st.markdown("**입력 예시:**")
+    st.markdown("📝 **입력 예시:**")
     st.markdown("- 한 줄에 한 세트씩 입력")
-    st.markdown("- 학생 이름은 띄어쓰기, 쉼표, 하이픈(-) 중 아무거나 사용 가능")
-    st.markdown("- 예: 박은영 조미진")
-    st.markdown("- 예: 김민수,이지후")
-    st.markdown("- 예: 최도윤-김민준")
+    st.markdown("- 세트 설정은 **띄어쓰기, 쉼표, 하이픈(-)** 중 아무거나 사용해서 설정 가능")
+    st.markdown("- 예시 1: 박성진 강영현")
+    st.markdown("- 예시 2: 김원필, 윤도운")
+    st.markdown("- 예시 3: 박성진-윤도운")
+    
+    # 이전 입력값이 있으면 불러오기
+    default_text = ""
+    if 'separation_text_input' in st.session_state and st.session_state.separation_text_input:
+        default_text = st.session_state.separation_text_input
     
     separation_input = st.text_area(
         "세트별로 한 줄씩 입력",
-        placeholder="박은영 조미진\n김민수 이지후 최도윤",
+        value=default_text,
+        placeholder="박성진 강영현\n김원필, 윤도운",
         height=100,
         key="separation_text"
     )
+    
+    # 세션 상태에 저장
+    st.session_state.separation_text_input = separation_input
     
     groups = []
     if separation_input:
@@ -466,8 +503,6 @@ def step_4_separation():
                 st.session_state.separation_groups = groups
             st.session_state.step = 5
             st.rerun()
-    
-    st.markdown('</div>', unsafe_allow_html=True)
 
 def step_5_front_priority():
     st.markdown('<div class="step-header">5단계: 앞줄 우선 학생</div>', unsafe_allow_html=True)
