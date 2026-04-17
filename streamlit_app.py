@@ -58,7 +58,7 @@ st.markdown("""
         align-items: center;
         justify-content: center;
         font-weight: 500;
-        font-size: 14px;
+        font-size: 18px;
     }
     .group-header {
         font-size: 20px;
@@ -86,24 +86,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 앱 제목
-st.title("🎓 똑똑한 자리 배치 도우미")
-st.markdown("초등학교 학급 자리 바꾸기를 쉽고 스마트하게!")
-st.divider()
-
-st.markdown("""<div style='text-align: center; padding: 30px 20px;'>
-<h2 style='color: #22714b; margin: 0;'>👋 환영합니다!</h2>
-<p style='font-size: 16px; color: #333; margin: 15px 0;'>우리 반 자리 바꾸기를 시작해 볼까요?<br>단계별로 안내해 드릴게요.</p>
-</div>""", unsafe_allow_html=True)
-
-if st.session_state.step == 0:
-    col1, col2, col3 = st.columns(3)
-    with col2:
-        if st.button("🚀 시작하기", key="start", help="자리 배치 과정을 시작합니다", use_container_width=True):
-            st.session_state.step = 1
-            st.rerun()
-
-# 세션 상태 초기화
+# 세션 상태 초기화 (맨 먼저 실행)
 if 'step' not in st.session_state:
     st.session_state.step = 0
 if 'students' not in st.session_state:
@@ -122,6 +105,23 @@ if 'arrangement' not in st.session_state:
     st.session_state.arrangement = {}
 if 'seat_layout' not in st.session_state:
     st.session_state.seat_layout = {}
+
+# 앱 제목
+st.title("🎓 똑똑한 자리 배치 도우미")
+st.markdown("초등학교 학급 자리 바꾸기를 쉽고 스마트하게!")
+st.divider()
+
+if st.session_state.step == 0:
+    st.markdown("""<div style='text-align: center; padding: 30px 20px;'>
+<h2 style='color: #22714b; margin: 0;'>👋 환영합니다!</h2>
+<p style='font-size: 16px; color: #333; margin: 15px 0;'>우리 반 자리 바꾸기를 시작해 볼까요?<br>단계별로 안내해 드릴게요.</p>
+</div>""", unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns(3)
+    with col2:
+        if st.button("🚀 시작하기", key="start", help="자리 배치 과정을 시작합니다", use_container_width=True):
+            st.session_state.step = 1
+            st.rerun()
 
 # 유틸리티 함수들
 def parse_student_input(text):
@@ -283,7 +283,7 @@ def render_seat_map(arrangement, seats):
             for seat in sorted_seats:
                 student = next((name for name, seat_num in arrangement.items() if seat_num == seat['좌석번호']), "")
                 seat_class = "front-seat" if seat['앞줄'] else "back-seat" if seat['뒷줄'] else ""
-                rows.append(f'<div class="seat-card {seat_class}">{student}<br/><small>({seat["좌석번호"]}번)</small></div>')
+                rows.append(f'<div class="seat-card {seat_class}">{student}</div>')
             
             st.markdown(''.join(rows), unsafe_allow_html=True)
 
@@ -292,7 +292,6 @@ def render_seat_map(arrangement, seats):
 
 def step_1_students():
     st.markdown('<div class="step-header">1단계: 학생 명단 입력</div>', unsafe_allow_html=True)
-    st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown("학생 명단을 불러와 볼까요?")
     
     input_method = st.radio("입력 방식 선택", ["직접 입력", "CSV 파일 업로드"], key="input_method")
@@ -333,38 +332,42 @@ def step_1_students():
                     st.rerun()
     
     st.markdown("💡 **팁**: 한글(.hwp) 파일은 표를 복사해 텍스트로 붙여넣거나 CSV로 저장해 업로드해 주세요.")
-    st.markdown('</div>', unsafe_allow_html=True)
 
 def step_2_seats():
     st.markdown('<div class="step-header">2단계: 자리 구조 입력</div>', unsafe_allow_html=True)
     st.markdown("교실 자리 구조를 설정해 주세요.")
-    st.markdown('<div class="card">', unsafe_allow_html=True)
     
-    num_groups = st.number_input("총 분단 수", min_value=1, max_value=10, value=4, key="num_groups")
+    # 중앙 정렬을 위한 컬럼
+    col1, col2, col3 = st.columns([1, 2, 1])
     
-    seats_per_group = []
-    cols = st.columns(num_groups)
-    for i in range(num_groups):
-        with cols[i]:
-            seats = st.number_input(f"{i+1}분단 좌석 수", min_value=1, max_value=20, value=5, key=f"group_{i}")
-            seats_per_group.append(seats)
-    
-    total_seats = sum(seats_per_group)
-    student_count = len(st.session_state.students)
-    
-    st.info(f"총 좌석 수: {total_seats}, 학생 수: {student_count}")
-    
-    if total_seats != student_count:
-        st.warning("⚠️ 좌석 수와 학생 수가 맞지 않아요. 조정해 주세요.")
-    else:
-        st.success("✅ 좌석 구조가 설정되었습니다!")
-        if st.button("다음 단계로", key="confirm_seats"):
-            st.session_state.seats = build_seat_layout(num_groups, seats_per_group)
-            st.session_state.seat_layout = {'num_groups': num_groups, 'seats_per_group': seats_per_group}
-            st.session_state.step = 3
-            st.rerun()
-    
-    st.markdown('</div>', unsafe_allow_html=True)
+    with col2:
+        num_groups = st.number_input("총 분단 수", min_value=1, max_value=10, value=4, key="num_groups")
+        
+        st.markdown("---")
+        
+        seats_per_group = []
+        cols = st.columns(num_groups)
+        for i in range(num_groups):
+            with cols[i]:
+                seats = st.number_input(f"{i+1}분단", min_value=1, max_value=20, value=5, key=f"group_{i}")
+                seats_per_group.append(seats)
+        
+        st.markdown("---")
+        
+        total_seats = sum(seats_per_group)
+        student_count = len(st.session_state.students)
+        
+        st.info(f"총 좌석 수: {total_seats}, 학생 수: {student_count}")
+        
+        if total_seats != student_count:
+            st.warning("⚠️ 좌석 수와 학생 수가 맞지 않아요. 조정해 주세요.")
+        else:
+            st.success("✅ 좌석 구조가 설정되었습니다!")
+            if st.button("다음 단계로", key="confirm_seats"):
+                st.session_state.seats = build_seat_layout(num_groups, seats_per_group)
+                st.session_state.seat_layout = {'num_groups': num_groups, 'seats_per_group': seats_per_group}
+                st.session_state.step = 3
+                st.rerun()
 
 def step_3_balance():
     st.markdown('<div class="step-header">3단계: 모둠 균형 배치 학생</div>', unsafe_allow_html=True)
